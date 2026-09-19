@@ -1,0 +1,13 @@
+{
+  "name": "veltex-ads",
+  "version": "1.0.0",
+  "description": "VELTEX Ads — self-serve video ad server for web apps",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}
