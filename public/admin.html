@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELTEX Ads — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1116; --panel:#161B22; --panel-2:#1D2430; --line:#293241;
+    --paper:#EDEFF2; --muted:#8A94A6; --signal:#FFB020; --signal-dim:#7A5A1E;
+    --live:#4ADE80; --danger:#F0654A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  a{color:inherit;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(14,17,22,0.92);backdrop-filter:blur(8px);z-index:50;flex-wrap:wrap;gap:10px;}
+  .wordmark{display:flex;align-items:center;gap:10px;}
+  .wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--signal);box-shadow:0 0 12px var(--signal);}
+  .wordmark span.name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;}
+  .wordmark span.name b{color:var(--signal);}
+  .tagline{color:var(--muted);font-size:12.5px;margin-left:12px;padding-left:12px;border-left:1px solid var(--line);}
+  .tabs{display:flex;gap:4px;}
+  .tab-btn{background:none;border:1px solid transparent;color:var(--muted);padding:8px 14px;border-radius:7px;font-size:13.5px;font-weight:500;transition:all .15s ease;}
+  .tab-btn:hover{color:var(--paper);}
+  .tab-btn.active{background:var(--panel);color:var(--paper);border-color:var(--line);}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 32px 90px;}
+  .view{display:none;}
+  .view.active{display:block;animation:rise .35s ease;}
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .lede{max-width:620px;margin-bottom:34px;}
+  .lede h1{font-size:26px;margin:0 0 8px;font-weight:600;}
+  .lede p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0;}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:22px;}
+  .panel h3{margin:0 0 4px;font-size:15px;font-weight:600;}
+  .panel .sub{color:var(--muted);font-size:12.5px;margin:0 0 18px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .field input[type=text]{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--paper);padding:10px 12px;border-radius:7px;font-size:13.5px;outline:none;transition:border-color .15s;}
+  .field input:focus{border-color:var(--signal);}
+  .filedrop{border:1.5px dashed var(--line);border-radius:9px;padding:22px;text-align:center;color:var(--muted);font-size:13px;transition:border-color .15s, background .15s;cursor:pointer;}
+  .filedrop:hover, .filedrop.over{border-color:var(--signal);background:rgba(255,176,32,0.04);}
+  .filedrop input{display:none;}
+  .filedrop b{color:var(--paper);}
+
+  .btn{background:var(--signal);color:#1A1300;border:none;border-radius:7px;padding:10px 18px;font-size:13.5px;font-weight:600;transition:filter .15s, transform .1s;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:transparent;color:var(--paper);border:1px solid var(--line);font-weight:500;}
+  .btn.ghost:hover{border-color:var(--signal);}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid rgba(240,101,74,0.35);font-weight:500;padding:6px 10px;font-size:12px;}
+  .btn.danger:hover{background:rgba(240,101,74,0.08);}
+  .btn.small{padding:6px 12px;font-size:12px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .empty{text-align:center;padding:34px 20px;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:10px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .card{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .card video{width:100%;height:128px;object-fit:cover;background:#000;display:block;}
+  .card .meta{padding:12px 13px;}
+  .card .meta .name{font-size:13.5px;font-weight:600;margin-bottom:2px;}
+  .card .meta .cta{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .card .stats{display:flex;gap:12px;padding:0 13px 10px;font-size:11px;color:var(--muted);}
+  .card .stats b{color:var(--paper);font-family:'IBM Plex Mono',monospace;font-weight:500;}
+  .card .foot{display:flex;justify-content:flex-end;padding:8px 10px;border-top:1px solid var(--line);}
+
+  .site-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .site-row .info .name{font-weight:600;font-size:13.5px;}
+  .site-row .info .url{color:var(--muted);font-size:12px;margin-top:2px;word-break:break-all;}
+  .site-row .stats{display:flex;gap:14px;font-size:11px;color:var(--muted);}
+  .site-row .stats b{color:var(--signal);font-family:'IBM Plex Mono',monospace;}
+  .site-row .actions{display:flex;gap:8px;flex-shrink:0;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+  .stat-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .stat-box .num{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--signal);}
+  .stat-box .lbl{color:var(--muted);font-size:12px;margin-top:2px;}
+
+  .codebox{background:#0A0D11;border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-size:12px;line-height:1.6;color:#9FD9B4;overflow-x:auto;white-space:pre;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel-2);border:1px solid var(--signal);color:var(--paper);padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:all .25s ease;pointer-events:none;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(6,8,10,0.7);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px;max-width:520px;width:100%;}
+  .modal h3{margin-top:0;}
+  .modal .close{float:right;color:var(--muted);border:none;background:none;font-size:18px;}
+
+  select{background:var(--ink);border:1px solid var(--line);color:var(--paper);padding:9px 12px;border-radius:7px;font-size:13px;}
+
+  .device{width:340px;margin:0 auto;background:#000;border-radius:16px;padding:8px;border:1px solid var(--line);}
+  .device .screen{position:relative;background:#000;border-radius:9px;overflow:hidden;aspect-ratio:16/9;}
+  .device iframe{width:100%;height:100%;border:0;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--live);background:rgba(74,222,128,0.1);padding:3px 9px;border-radius:20px;font-weight:500;}
+  .badge .d{width:6px;height:6px;border-radius:50%;background:var(--live);}
+
+  .note{display:flex;gap:10px;background:rgba(255,176,32,0.06);border:1px solid var(--signal-dim);border-radius:9px;padding:12px 14px;font-size:12.5px;color:#D9C08A;line-height:1.55;margin-bottom:22px;}
+  .note b{color:var(--signal);}
+  .note.ok{background:rgba(74,222,128,0.06);border-color:#2E6B48;color:#B8E6CA;}
+  .note.ok b{color:var(--live);}
+
+  footer{text-align:center;color:var(--muted);font-size:11.5px;padding:30px 20px;border-top:1px solid var(--line);}
+
+  @media(max-width:680px){
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .topbar{padding:14px 16px;}
+    .tagline{display:none;}
+    .wrap{padding:26px 16px 70px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;">
+    <div class="wordmark"><div class="dot"></div><span class="name">VELTEX <b>ADS</b></span></div>
+    <div class="tagline">Video ads for your web apps</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="dashboard">Dashboard</button>
+    <button class="tab-btn" data-view="library">Ad Library</button>
+    <button class="tab-btn" data-view="sites">Sites &amp; Embed</button>
+    <button class="tab-btn" data-view="preview">Live Preview</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="note ok" id="liveNote">
+    <span>&#9889;</span>
+    <div><b>This is live.</b> Ads and stats are stored on this server, not in your browser — any visitor to a site you register will be served real ads through the embed code below.</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="lede"><h1>Dashboard</h1><p>Overview of your registered sites, ad inventory, and delivery so far.</p></div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="num" id="statSites">0</div><div class="lbl">Sites registered</div></div>
+      <div class="stat-box"><div class="num" id="statAds">0</div><div class="lbl">Ads in library</div></div>
+      <div class="stat-box"><div class="num" id="statImpr">0</div><div class="lbl">Total impressions</div></div>
+      <div class="stat-box"><div class="num" id="statClicks">0</div><div class="lbl">Total clicks</div></div>
+    </div>
+    <div class="panel">
+      <h3>Quick start</h3>
+      <p class="sub">Paste your web app's link to register it as a publisher site.</p>
+      <div class="row" style="align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:220px;"><label>Your web app link</label><input type="text" id="quickSiteUrl" placeholder="https://your-app.example.com"></div>
+        <div class="field" style="flex:1;min-width:180px;"><label>Site name</label><input type="text" id="quickSiteName" placeholder="My Web App"></div>
+        <button class="btn" id="quickAddSite">Register site</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Ad performance</h3>
+      <p class="sub">Impressions per ad, most-shown first.</p>
+      <div id="topAdsList"></div>
+    </div>
+  </div>
+
+  <!-- AD LIBRARY -->
+  <div class="view" id="view-library">
+    <div class="lede"><h1>Ad Library</h1><p>Upload the video ad creatives that will rotate through your embed slots. Each ad has a call-to-action link that visitors reach when they click it.</p></div>
+    <div class="panel">
+      <h3>Upload a new ad</h3>
+      <p class="sub">MP4/WebM recommended, keep it under ~30MB for smooth playback.</p>
+      <div class="field"><label>Ad name</label><input type="text" id="adName" placeholder="Spring Sale — 20% off"></div>
+      <div class="field"><label>Call-to-action link (where a click sends visitors)</label><input type="text" id="adCta" placeholder="https://your-landing-page.example.com"></div>
+      <div class="field">
+        <label>Video file</label>
+        <div class="filedrop" id="dropZone">
+          <b>Click to choose a video</b> or drag one here<br>
+          <span id="dropFileName" style="color:var(--muted);"></span>
+          <input type="file" id="adFile" accept="video/*">
+        </div>
+      </div>
+      <button class="btn" id="uploadAdBtn">Upload ad</button>
+    </div>
+    <div class="panel">
+      <h3>Inventory</h3>
+      <p class="sub" id="invCount">0 ads uploaded</p>
+      <div class="grid" id="adGrid"></div>
+      <div class="empty" id="adEmpty" style="display:none;">No ads yet — upload your first video above.</div>
+    </div>
+  </div>
+
+  <!-- SITES & EMBED -->
+  <div class="view" id="view-sites">
+    <div class="lede"><h1>Sites &amp; Embed</h1><p>Register each web app that should show ads, then copy its embed code into your app's HTML.</p></div>
+    <div class="panel">
+      <h3>Add a site</h3>
+      <div class="field"><label>Web app link</label><input type="text" id="siteUrl" placeholder="https://your-app.example.com"></div>
+      <div class="field"><label>Site name</label><input type="text" id="siteName" placeholder="My Web App"></div>
+      <button class="btn" id="addSiteBtn">Add site</button>
+    </div>
+    <div class="panel">
+      <h3>Registered sites</h3>
+      <div id="siteList"></div>
+      <div class="empty" id="siteEmpty" style="display:none;">No sites yet — add one above.</div>
+    </div>
+  </div>
+
+  <!-- LIVE PREVIEW -->
+  <div class="view" id="view-preview">
+    <div class="lede"><h1>Live Preview</h1><p>This is the exact embed a visitor on the selected site would see, loaded from this server.</p></div>
+    <div class="panel">
+      <div class="row" style="align-items:center;margin-bottom:18px;">
+        <label style="font-size:12.5px;color:var(--muted);">Previewing as site:</label>
+        <select id="previewSiteSelect"></select>
+        <span class="badge"><span class="d"></span>Live</span>
+      </div>
+      <div class="device"><div class="screen" id="previewScreen"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>VELTEX ADS — self-serve video ads for web apps</footer>
+
+<div class="modal-bg" id="embedModalBg">
+  <div class="modal">
+    <button class="close" id="closeModal">&times;</button>
+    <h3>Embed code</h3>
+    <p style="color:var(--muted);font-size:12.5px;margin-top:-6px;">Paste this into the HTML of the site you registered.</p>
+    <div class="codebox" id="embedCode"></div>
+    <div style="margin-top:14px;text-align:right;"><button class="btn small" id="copyEmbedBtn">Copy code</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function api(path, opts){
+  const res = await fetch(path, opts);
+  if(!res.ok){
+    let msg = 'Request failed';
+    try{ msg = (await res.json()).error || msg; }catch(e){}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'dashboard') refreshDashboard();
+    if(btn.dataset.view === 'preview') refreshPreviewSiteList();
+  });
+});
+
+/* ---------- Ad Library ---------- */
+const dropZone = document.getElementById('dropZone');
+const adFile = document.getElementById('adFile');
+dropZone.addEventListener('click', ()=>adFile.click());
+dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('over');});
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault(); dropZone.classList.remove('over');
+  if(e.dataTransfer.files.length){
+    adFile.files = e.dataTransfer.files;
+    document.getElementById('dropFileName').textContent = e.dataTransfer.files[0].name;
+  }
+});
+adFile.addEventListener('change', ()=>{
+  document.getElementById('dropFileName').textContent = adFile.files[0] ? adFile.files[0].name : '';
+});
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('uploadAdBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('adName').value.trim();
+  const cta = document.getElementById('adCta').value.trim();
+  const file = adFile.files[0];
+  if(!name){ toast('Give the ad a name'); return; }
+  if(!file){ toast('Choose a video file'); return; }
+  const btn = document.getElementById('uploadAdBtn');
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  try{
+    const dataBase64 = await fileToBase64(file);
+    await api('/api/ads', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, cta, mimetype:file.type, dataBase64})
+    });
+    document.getElementById('adName').value='';
+    document.getElementById('adCta').value='';
+    adFile.value='';
+    document.getElementById('dropFileName').textContent='';
+    toast('Ad uploaded');
+    refreshAdLibrary();
+    refreshDashboard();
+  }catch(e){
+    toast('Upload failed: ' + e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Upload ad';
+  }
+});
+
+async function refreshAdLibrary(){
+  const [ads, stats] = await Promise.all([api('/api/ads'), api('/api/stats')]);
+  const grid = document.getElementById('adGrid');
+  const emptyEl = document.getElementById('adEmpty');
+  document.getElementById('invCount').textContent = ads.length + (ads.length===1 ? ' ad uploaded' : ' ads uploaded');
+  if(!ads.length){ grid.innerHTML=''; emptyEl.style.display='block'; return; }
+  emptyEl.style.display='none';
+
+  const perAd = {};
+  stats.perAd.forEach(p=>perAd[p.id]=p);
+
+  grid.innerHTML = ads.map(ad=>{
+    const p = perAd[ad.id] || {impressions:0, clicks:0};
+    return `
+      <div class="card">
+        <video src="${ad.url}" muted loop preload="metadata"></video>
+        <div class="meta">
+          <div class="name">${escapeHtml(ad.name)}</div>
+          <div class="cta">${escapeHtml(ad.cta || 'No CTA link set')}</div>
+        </div>
+        <div class="stats"><span>Impr <b>${p.impressions}</b></span><span>Clicks <b>${p.clicks}</b></span></div>
+        <div class="foot"><button class="btn danger" data-del-ad="${ad.id}">Delete</button></div>
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('[data-del-ad]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await api('/api/ads/'+btn.dataset.delAd, {method:'DELETE'});
+      toast('Ad removed');
+      refreshAdLibrary();
+      refreshDashboard();
+    });
+  });
+  grid.querySelectorAll('video').forEach(v=>{
+    v.addEventListener('mouseenter', ()=>v.play().catch(()=>{}));
+    v.addEventListener('mouseleave', ()=>{v.pause(); v.currentTime=0;});
+  });
+}
+
+/* ---------- Sites ---------- */
+document.getElementById('addSiteBtn').addEventListener('click', async ()=>{
+  const url = document.getElementById('siteUrl').value.trim();
+  const name = document.getElementById('siteName').value.trim();
+  if(!url){ toast('Paste your web app link'); return; }
+  await api('/api/sites', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url,name})});
+  document.getElementById('siteUrl').value='';
+  document.getElementById('siteName').value='';
+  toast('Site registered');
+  refreshSites();
+  refreshDashboard();
+});
+
+document.getElementById('quickAddSite').addEventListener('click', async ()=>{
+  const url = document.getElementById('quickSiteUrl').value.trim();
+  const name = document.getElementById('quickSiteName').value.trim();
+  if(!url){ toast('Paste your web app link'); return; }
+  await api('/api/sites', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url,name})});
+  document.getElementById('quickSiteUrl').value='';
+  document.getElementById('quickSiteName').value='';
+  toast('Site registered — open Sites & Embed to get your code');
+  refreshDashboard();
+});
+
+document.getElementById('closeModal').addEventListener('click', ()=>{
+  document.getElementById('embedModalBg').classList.remove('show');
+});
+document.getElementById('copyEmbedBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('embedCode').textContent;
+  navigator.clipboard.writeText(text).then(()=>toast('Copied embed code'));
+});
+
+async function refreshSites(){
+  const [sites, stats] = await Promise.all([api('/api/sites'), api('/api/stats')]);
+  const list = document.getElementById('siteList');
+  const emptyEl = document.getElementById('siteEmpty');
+  if(!sites.length){ list.innerHTML=''; emptyEl.style.display='block'; return; }
+  emptyEl.style.display='none';
+
+  const perSite = {};
+  stats.perSite.forEach(p=>perSite[p.id]=p);
+
+  list.innerHTML = sites.map(site=>{
+    const p = perSite[site.id] || {impressions:0, clicks:0};
+    return `
+      <div class="site-row">
+        <div class="info"><div class="name">${escapeHtml(site.name)}</div><div class="url">${escapeHtml(site.url)}</div></div>
+        <div class="stats"><span>Impr <b>${p.impressions}</b></span><span>Clicks <b>${p.clicks}</b></span></div>
+        <div class="actions">
+          <button class="btn ghost small" data-embed="${site.id}">Get embed code</button>
+          <button class="btn danger" data-del-site="${site.id}">Remove</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('[data-embed]').forEach(btn=>{
+    btn.addEventListener('click', ()=>showEmbedModal(btn.dataset.embed));
+  });
+  list.querySelectorAll('[data-del-site]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await api('/api/sites/'+btn.dataset.delSite, {method:'DELETE'});
+      toast('Site removed');
+      refreshSites();
+      refreshDashboard();
+      refreshPreviewSiteList();
+    });
+  });
+}
+
+function showEmbedModal(siteId){
+  const base = location.origin;
+  const code = `<iframe
+  src="${base}/embed?site=${siteId}"
+  width="400" height="225"
+  style="border:0;border-radius:10px;overflow:hidden;"
+  allow="autoplay"
+  title="Advertisement">
+</iframe>`;
+  document.getElementById('embedCode').textContent = code;
+  document.getElementById('embedModalBg').classList.add('show');
+}
+
+/* ---------- Dashboard ---------- */
+async function refreshDashboard(){
+  const stats = await api('/api/stats');
+  document.getElementById('statSites').textContent = stats.sites;
+  document.getElementById('statAds').textContent = stats.ads;
+  document.getElementById('statImpr').textContent = stats.impressions;
+  document.getElementById('statClicks').textContent = stats.clicks;
+
+  const topAdsList = document.getElementById('topAdsList');
+  if(!stats.perAd.length){
+    topAdsList.innerHTML = `<div class="empty">Upload ads in the Ad Library to see performance here.</div>`;
+    return;
+  }
+  topAdsList.innerHTML = stats.perAd.map(r=>`
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;">
+      <span>${escapeHtml(r.name)}</span>
+      <span style="color:var(--muted);font-family:'IBM Plex Mono',monospace;">${r.impressions} impr · ${r.clicks} clicks</span>
+    </div>
+  `).join('');
+}
+
+/* ---------- Live Preview ---------- */
+async function refreshPreviewSiteList(){
+  const sites = await api('/api/sites');
+  const sel = document.getElementById('previewSiteSelect');
+  const screen = document.getElementById('previewScreen');
+  if(!sites.length){
+    sel.innerHTML = `<option value="">No sites registered yet</option>`;
+    screen.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;padding:16px;">Register a site first, in "Sites &amp; Embed".</div>`;
+    return;
+  }
+  sel.innerHTML = sites.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  renderPreview();
+}
+function renderPreview(){
+  const siteId = document.getElementById('previewSiteSelect').value;
+  const screen = document.getElementById('previewScreen');
+  if(!siteId) return;
+  screen.innerHTML = `<iframe src="/embed?site=${siteId}" allow="autoplay" title="Ad preview"></iframe>`;
+}
+document.getElementById('previewSiteSelect').addEventListener('change', renderPreview);
+
+/* ---------- Boot ---------- */
+refreshAdLibrary();
+refreshSites();
+refreshDashboard();
+refreshPreviewSiteList();
+</script>
+</body>
+</html>
